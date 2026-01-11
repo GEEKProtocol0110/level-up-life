@@ -1,14 +1,13 @@
 {
-  "$schema": "https://turbo.build/json-schema.json",
-  "version": "2",
+  "$schema": "https://turbo.build/schema.json",
   "globalEnv": [".env.local", ".env"],
   "tasks": {
     "dev": {
       "cache": false,
-      "interactive": true
+      "persistent": true
     },
     "build": {
-      "outputs": ["{DIR}/.next", "{DIR}/dist", "{DIR}/build"],
+      "outputs": ["{DIR}/.next/**", "{DIR}/dist/**", "{DIR}/build/**"],
       "dependsOn": ["^build"]
     },
     "lint": {
