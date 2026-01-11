@@ -1,3 +1,9 @@
-// Core game engine placeholder
-// To be implemented in Step C
-export const CORE_VERSION = '0.0.1';
+// Core game engine exports
+
+export * from "./types";
+export * from "./age";
+export * from "./gates";
+export * from "./cadence";
+export * from "./xp";
+
+export const CORE_VERSION = "0.0.1";
