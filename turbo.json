@@ -1,0 +1,21 @@
+{
+  "$schema": "https://turbo.build/json-schema.json",
+  "version": "2",
+  "globalEnv": [".env.local", ".env"],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "interactive": true
+    },
+    "build": {
+      "outputs": ["{DIR}/.next", "{DIR}/dist", "{DIR}/build"],
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "outputs": []
+    }
+  }
+}

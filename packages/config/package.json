@@ -1,0 +1,9 @@
+{
+  "name": "@level-up-life/config",
+  "version": "0.0.1",
+  "private": true,
+  "files": ["tsconfig*.json", ".eslintrc.js"],
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
