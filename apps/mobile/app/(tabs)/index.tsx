@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -26,6 +26,7 @@ export default function TodayScreen() {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [childForm, setChildForm] = useState({ name: '', birthdate: '' });
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const hasSetInitialChild = useRef(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
@@ -52,10 +53,12 @@ export default function TodayScreen() {
   });
 
   useEffect(() => {
-    if (!selectedChildId && (childrenQuery.data?.length ?? 0) > 0) {
+    if (!hasSetInitialChild.current && (childrenQuery.data?.length ?? 0) > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedChildId(childrenQuery.data![0].id);
+      hasSetInitialChild.current = true;
     }
-  }, [childrenQuery.data, selectedChildId]);
+  }, [childrenQuery.data]);
 
   const questsQuery = useQuery<QuestInstance[]>({
     queryKey: ['quests', selectedChildId],

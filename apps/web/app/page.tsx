@@ -15,7 +15,7 @@ import {
 } from "@level-up-life/api";
 import { ageYears, computeLevel, getPeriod } from "@level-up-life/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 
 const supabase = createSupabaseClient();
@@ -27,6 +27,7 @@ export default function Home() {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [childForm, setChildForm] = useState({ name: "", birthdate: "" });
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const hasSetInitialChild = useRef(false);
 
   // Session handling
   useEffect(() => {
@@ -54,10 +55,12 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (!selectedChildId && (childrenQuery.data?.length ?? 0) > 0) {
+    if (!hasSetInitialChild.current && (childrenQuery.data?.length ?? 0) > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedChildId(childrenQuery.data![0].id);
+      hasSetInitialChild.current = true;
     }
-  }, [childrenQuery.data, selectedChildId]);
+  }, [childrenQuery.data]);
 
   const questsQuery = useQuery<QuestInstance[]>({
     queryKey: ["quests", selectedChildId],
