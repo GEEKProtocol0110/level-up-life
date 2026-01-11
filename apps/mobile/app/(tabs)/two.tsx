@@ -1,31 +1,99 @@
-import { StyleSheet } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Button, ScrollView, StyleSheet } from 'react-native';
+import type { Session } from '@supabase/supabase-js';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
+import { fetchChildren, getOrCreateFamily } from '@level-up-life/api';
+import { ageYears, walletMode } from '@level-up-life/core';
 import { Text, View } from '@/components/Themed';
+import { supabase } from '@/lib/supabase';
 
-export default function TabTwoScreen() {
+export default function WalletScreen() {
+  const queryClient = useQueryClient();
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession));
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const familyQuery = useQuery({
+    queryKey: ['wallet-family', session?.user.id],
+    queryFn: async () => getOrCreateFamily(supabase, session!.user.id, 'My Family'),
+    enabled: !!session,
+  });
+
+  const childrenQuery = useQuery({
+    queryKey: ['wallet-children', familyQuery.data?.id],
+    queryFn: async () => fetchChildren(supabase, familyQuery.data!.id),
+    enabled: !!familyQuery.data?.id,
+  });
+
+  const firstChild = useMemo(() => childrenQuery.data?.[0] ?? null, [childrenQuery.data]);
+  const gate = firstChild ? walletMode(ageYears(firstChild.birthdate)) : null;
+
+  if (!session) {
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Wallet (Coming Later)</Text>
+        <Text style={styles.subtitle}>Sign in on Today tab to load your family.</Text>
+      </ScrollView>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/two.tsx" />
-    </View>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.title}>Wallet (Coming Later)</Text>
+          <Text style={styles.subtitle}>Age-appropriate gate preview</Text>
+        </View>
+        <Button title="Refresh" onPress={() => queryClient.invalidateQueries({ queryKey: ['wallet-children'] })} />
+      </View>
+
+      <View style={styles.card}>
+        {firstChild ? (
+          <>
+            <Text style={styles.sectionTitle}>{firstChild.display_name}</Text>
+            <Text style={styles.subtitle}>Age {ageYears(firstChild.birthdate)}</Text>
+            <Text style={styles.subtitle}>Wallet mode: {gate}</Text>
+            <Text style={styles.subtitle}>Real wallet features will unlock automatically by age with parent controls.</Text>
+          </>
+        ) : (
+          <Text style={styles.subtitle}>Add a child on Today tab to preview wallet gate.</Text>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 16,
+    gap: 12,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  subtitle: {
+    color: '#475569',
+    marginTop: 4,
+  },
+  card: {
+    backgroundColor: '#f8fafc',
+    padding: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
   },
 });

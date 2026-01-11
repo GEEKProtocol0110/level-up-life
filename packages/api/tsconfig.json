@@ -9,6 +9,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@level-up-life/core": ["../core/src"],
+      "@level-up-life/api": ["./src"],
+      "@level-up-life/ui": ["../ui/src"]
+    },
     "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,

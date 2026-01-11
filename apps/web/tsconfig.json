@@ -13,13 +13,16 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@level-up-life/api": ["../../packages/api/src"],
+      "@level-up-life/core": ["../../packages/core/src"]
     }
   },
   "include": [

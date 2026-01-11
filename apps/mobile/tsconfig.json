@@ -2,10 +2,13 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@level-up-life/api": ["../packages/api/src", "../../packages/api/src"],
+      "@level-up-life/core": ["../packages/core/src", "../../packages/core/src"]
     }
   },
   "include": [

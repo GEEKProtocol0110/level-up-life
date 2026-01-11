@@ -24,5 +24,9 @@
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.90.1",
+    "zod": "^3.25.76"
   }
 }
