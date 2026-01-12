@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Button, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Button, ScrollView, StyleSheet, TextInput, View, TouchableOpacity } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 
 import {
   completeQuestInstance,
@@ -22,23 +23,30 @@ import { supabase } from '@/lib/supabase';
 export default function TodayScreen() {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
-  const [authForm, setAuthForm] = useState({ email: '', password: '' });
-  const [isSigningUp, setIsSigningUp] = useState(false);
-  const [childForm, setChildForm] = useState({ name: '', birthdate: '' });
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const hasSetInitialChild = useRef(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session ?? null);
+      if (!data.session) {
+        router.replace('/auth');
+      }
+    });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (!newSession) {
         queryClient.clear();
         setSelectedChildId(null);
+        router.replace('/auth');
       }
     });
     return () => listener.subscription.unsubscribe();
   }, [queryClient]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   const familyQuery = useQuery<Family>({
     queryKey: ['family', session?.user.id],
@@ -136,10 +144,8 @@ export default function TodayScreen() {
   const levelInfo = useMemo(() => computeLevel(xpQuery.data ?? 0), [xpQuery.data]);
 
   if (!session) {
-    return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Level-Up Life</Text>
-        <Text style={styles.subtitle}>Sign in to manage family quests.</Text>
+    return null; // Will redirect to auth via useEffect
+  }
         <View style={styles.card}>
           <TextInput
             style={styles.input}
@@ -179,19 +185,32 @@ export default function TodayScreen() {
           <Text style={styles.title}>Today&apos;s Quests</Text>
           <Text style={styles.subtitle}>Level {levelInfo.level} • XP {xpQuery.data ?? 0}</Text>
         </View>
-        <Button title="Sign out" onPress={() => supabase.auth.signOut()} />
+        <TouchableOpacity onPress={handleSignOut}>
+          <Text style={styles.signOutButton}>Sign out</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Children</Text>
         <View style={styles.tagRow}>
           {childrenQuery.data?.map((child) => (
-            <Button
+            <TouchableOpacity
               key={child.id}
-              title={selectedChildId === child.id ? `★ ${child.display_name}` : child.display_name}
+              style={[
+                styles.childButton,
+                selectedChildId === child.id && styles.childButtonActive,
+              ]}
               onPress={() => setSelectedChildId(child.id)}
-              color={selectedChildId === child.id ? '#2563eb' : '#0f172a'}
-            />
+            >
+              <Text
+                style={[
+                  styles.childButtonText,
+                  selectedChildId === child.id && styles.childButtonTextActive,
+                ]}
+              >
+                {selectedChildId === child.id ? `★ ${child.display_name}` : child.display_name}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
         <View style={styles.inputRow}>
@@ -297,6 +316,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  signOutButton: {
+    color: '#2563eb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  childButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#e2e8f0',
+  },
+  childButtonActive: {
+    backgroundColor: '#2563eb',
+  },
+  childButtonText: {
+    color: '#0f172a',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  childButtonTextActive: {
+    color: '#fff',
   },
   questRow: {
     flexDirection: 'row',

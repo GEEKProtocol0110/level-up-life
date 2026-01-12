@@ -3,7 +3,6 @@
 import {
   completeQuestInstance,
   createChildProfile,
-  createSupabaseClient,
   ensureQuestInstancesForToday,
   fetchChildren,
   fetchQuestInstancesForToday,
@@ -15,13 +14,13 @@ import {
 } from "@level-up-life/api";
 import { ageYears, computeLevel, getPeriod } from "@level-up-life/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-
-const supabase = createSupabaseClient();
+import { SupabaseContext } from "./providers";
 
 export default function Home() {
   const queryClient = useQueryClient();
+  const supabase = useContext(SupabaseContext);
   const [session, setSession] = useState<Session | null>(null);
   const [authForm, setAuthForm] = useState({ email: "", password: "" });
   const [isSigningUp, setIsSigningUp] = useState(false);
@@ -31,6 +30,7 @@ export default function Home() {
 
   // Session handling
   useEffect(() => {
+    if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
@@ -40,7 +40,7 @@ export default function Home() {
       }
     });
     return () => listener.subscription.unsubscribe();
-  }, [queryClient]);
+  }, [queryClient, supabase]);
 
   const familyQuery = useQuery<Family>({
     queryKey: ["family", session?.user.id],
@@ -89,6 +89,9 @@ export default function Home() {
       });
       if (error) throw error;
     },
+    onError: (err) => {
+      console.error("Auth error", err);
+    },
   });
 
   const addChildMutation = useMutation({
@@ -136,6 +139,21 @@ export default function Home() {
   }, [xpQuery.data]);
 
   const todayPeriod = getPeriod("daily", new Date());
+
+  if (!supabase) {
+    return (
+      <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 bg-white px-6 py-12 text-gray-900">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-semibold text-red-600">Configuration Error</h1>
+          <p className="text-gray-600">Supabase is not configured. Check your environment variables:</p>
+          <ul className="list-inside list-disc text-sm text-gray-600">
+            <li>NEXT_PUBLIC_SUPABASE_URL</li>
+            <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
+          </ul>
+        </div>
+      </main>
+    );
+  }
 
   if (!session) {
     return (
