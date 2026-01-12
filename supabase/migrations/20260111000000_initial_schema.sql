@@ -1,15 +1,16 @@
 -- Level-Up Life Initial Schema
 -- Creates core tables with RLS policies
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable UUID extension in public schema
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 -- ============================================================================
 -- FAMILY & MEMBERS
 -- ============================================================================
 
 CREATE TABLE family (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -22,7 +23,7 @@ CREATE INDEX idx_family_owner ON family(owner_user_id);
 CREATE TYPE family_role AS ENUM ('parent', 'caregiver', 'child');
 
 CREATE TABLE family_member (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   family_id UUID NOT NULL REFERENCES family(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role family_role NOT NULL,
@@ -40,7 +41,7 @@ CREATE INDEX idx_family_member_user ON family_member(user_id);
 CREATE TYPE mode_type AS ENUM ('child', 'youth', 'adult', 'legacy');
 
 CREATE TABLE child_profile (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   family_id UUID NOT NULL REFERENCES family(id) ON DELETE CASCADE,
   display_name TEXT NOT NULL,
   birthdate DATE NOT NULL,
@@ -54,7 +55,7 @@ CREATE INDEX idx_child_profile_family ON child_profile(family_id);
 
 -- Links a child profile to a user account when child login is activated
 CREATE TABLE child_account_link (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES child_profile(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   activated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -73,7 +74,7 @@ CREATE TYPE quest_domain AS ENUM ('academics', 'behavior', 'athletics', 'health'
 CREATE TYPE quest_cadence AS ENUM ('daily', 'weekly', 'monthly', 'yearly');
 
 CREATE TABLE quest (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   family_id UUID NOT NULL REFERENCES family(id) ON DELETE CASCADE,
   domain quest_domain NOT NULL DEFAULT 'general',
   title TEXT NOT NULL,
@@ -97,7 +98,7 @@ CREATE INDEX idx_quest_domain ON quest(domain);
 CREATE TYPE quest_status AS ENUM ('pending', 'in_progress', 'completed', 'failed', 'skipped');
 
 CREATE TABLE quest_instance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES child_profile(id) ON DELETE CASCADE,
   quest_id UUID NOT NULL REFERENCES quest(id) ON DELETE CASCADE,
   period_start TIMESTAMPTZ NOT NULL,
@@ -119,7 +120,7 @@ CREATE INDEX idx_quest_instance_status ON quest_instance(status);
 -- ============================================================================
 
 CREATE TABLE xp_log (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES child_profile(id) ON DELETE CASCADE,
   domain quest_domain NOT NULL DEFAULT 'general',
   amount INTEGER NOT NULL,
