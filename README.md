@@ -1,3 +1,5 @@
+> **Repository scope: Separate family progression prototype.** This is separate from the active [GEEK HQ](https://www.geekprotocol.xyz/) release. For current Geek learning and product behavior, use [geek-protocol-hq](https://github.com/GEEKProtocol0110/geek-protocol-hq) and its [current release status](https://github.com/GEEKProtocol0110/geek-protocol-hq/blob/main/docs/PROJECT-STATUS.md). Features described below belong to this project; this status note does not certify a production deployment.
+
 # Level-Up Life
 
 > **Gamified lifelong growth management** — A cross-platform RPG for families to build better habits, track progress, and celebrate milestones together.
