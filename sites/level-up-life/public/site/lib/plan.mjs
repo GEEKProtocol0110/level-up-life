@@ -1,0 +1,16 @@
+export const domains={academics:'Learning',behavior:'Better habits',athletics:'Movement',health:'Well-being',recipes:'Cooking',money:'Money',general:'Your own thing'};
+export function emptyPlan(){return {version:2,profiles:[{id:'self',name:'My progress',kind:'adult'}],quests:[]};}
+export function normalizePlan(input){
+  if(!input||!Array.isArray(input.quests)||![1,2].includes(input.version))throw Error('Invalid plan');
+  const data=input.version===1?{version:2,profiles:emptyPlan().profiles,quests:input.quests.map(q=>({...q,profileId:'self',approval:q.completedAt?'approved':'none'}))}:input;
+  if(!Array.isArray(data.profiles)||!data.profiles.length||data.profiles.length>20||data.quests.length>1000)throw Error('Plan limit exceeded');
+  const validId=v=>typeof v==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(v);
+  const profiles=data.profiles.map(p=>{if(!p||!validId(p.id)||typeof p.name!=='string'||!p.name.trim()||p.name.length>40||!['adult','managed'].includes(p.kind)||(p.id==='self')!==(p.kind==='adult'))throw Error('Invalid profile');return {id:p.id,name:p.name.trim(),kind:p.kind};});
+  if(profiles.filter(p=>p.id==='self').length!==1||new Set(profiles.map(p=>p.id)).size!==profiles.length)throw Error('Invalid profiles');
+  const quests=data.quests.map(q=>{if(!q||!validId(q.id)||typeof q.name!=='string'||!q.name.trim()||q.name.length>100||!Object.hasOwn(domains,q.domain)||!Number.isInteger(q.difficulty)||q.difficulty<1||q.difficulty>5||typeof q.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(q.date)||!Number.isFinite(Date.parse(q.date))||new Date(q.date).toISOString().slice(0,10)!==q.date||!profiles.some(p=>p.id===q.profileId)||!['none','pending','approved'].includes(q.approval)||(q.completedAt!==null&&(typeof q.completedAt!=='string'||!Number.isFinite(Date.parse(q.completedAt))))||((q.approval==='none')!==(q.completedAt===null)))throw Error('Invalid quest');return {id:q.id,name:q.name.trim(),domain:q.domain,difficulty:q.difficulty,date:q.date,profileId:q.profileId,approval:q.approval,completedAt:q.completedAt};});
+  if(new Set(quests.map(q=>q.id)).size!==quests.length)throw Error('Duplicate quests');
+  return {version:2,profiles,quests};
+}
+export const reward=q=>Math.round(10*(1+(q.difficulty-1)*.5));
+export function getProgress(plan,profileId='self'){const completed=plan.quests.filter(q=>q.profileId===profileId&&q.approval==='approved');const xp=completed.reduce((s,q)=>s+reward(q),0);let current=xp,level=0;while(current>=100+25*level){current-=100+25*level;level++;}return{xp,level,current,next:100+25*level,completed:completed.length};}
+export function mergePlans(base,extra,newId){const result=normalizePlan(base),incoming=normalizePlan(extra);const remap=new Map([['self','self']]);for(const profile of incoming.profiles.filter(p=>p.id!=='self')){const existing=result.profiles.find(p=>p.id===profile.id);if(existing&&existing.name===profile.name)remap.set(profile.id,profile.id);else{const next={...profile,id:existing?newId():profile.id};remap.set(profile.id,next.id);result.profiles.push(next);}}const ids=new Set(result.quests.map(q=>q.id));for(const q of incoming.quests){if(!ids.has(q.id)){result.quests.push({...q,profileId:remap.get(q.profileId)});ids.add(q.id);}}return normalizePlan(result);}
