@@ -2,6 +2,8 @@
 
 # Level-Up Life
 
+The adult/parent introduction and browser-local planner are in [apps/parent-site](apps/parent-site/README.md). This standalone prototype supports personal quests, XP, domain templates, budget practice, and JSON backups. It does not connect to Supabase accounts or shared family data.
+
 > **Gamified lifelong growth management** — A cross-platform RPG for families to build better habits, track progress, and celebrate milestones together.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
