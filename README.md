@@ -2,7 +2,7 @@
 
 # Level-Up Life
 
-The adult/parent introduction and browser-local planner are in [apps/parent-site](apps/parent-site/README.md). This standalone prototype supports personal quests, XP, domain templates, budget practice, and JSON backups. It does not connect to Supabase accounts or shared family data.
+The active hosted adult/parent planner is in [sites/level-up-life](sites/level-up-life/README.md), with ChatGPT account saving, parent-managed profiles, quest approvals, and XP. The earlier device-only prototype is preserved in [apps/parent-site](apps/parent-site/README.md). The existing Next.js/Expo/Supabase application remains separate.
 
 > **Gamified lifelong growth management** — A cross-platform RPG for families to build better habits, track progress, and celebrate milestones together.
 
